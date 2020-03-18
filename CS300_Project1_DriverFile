@@ -1,0 +1,220 @@
+import java.io.*;
+import java.util.Scanner;
+import java.util.ArrayList;
+public class CS300_Project1 {
+    public static void main(String[] args) {
+        try{
+            File f = new File("CSV-File-A.csv");
+            f.createNewFile();
+            PrintWriter writer = new PrintWriter(f);
+           
+            for (int i=0; i<1000; i++){
+                writeFile(writer, randomInt());
+            }
+            writer.close();
+            RandomAccessFile raf = new RandomAccessFile(f, "rw");
+            raf.setLength(1024*1024);
+            raf.close();
+           
+            
+                    
+            ArrayList<Integer> list = readFile(f);
+            ArrayList<Integer> list2 = (ArrayList<Integer>)list.clone();
+            bubbleSort(list2);
+            ArrayList<Integer> list3 = (ArrayList<Integer>)list.clone();
+            insertionSort(list3);
+            ArrayList<Integer> list4 = (ArrayList<Integer>)list.clone();
+            mergeSort(list4);
+            ArrayList<Integer> list5 = (ArrayList<Integer>)list.clone();
+            quickSort(list5, 0, list5.size()-1);
+            ArrayList<Integer> list6 = (ArrayList<Integer>)list.clone();
+            ThreadSort ts = new ThreadSort(list6);
+            ts.sort();
+            ArrayList<Integer> tsList = ts.getList();
+            
+            File bubbleSortFile = new File("bubbleSort.csv");
+            File insertionSortFile = new File("insertionSort.csv");
+            File mergeSortFile = new File("mergeSort.csv");
+            File quickSortFile = new File("quickSort.csv");
+            File threadMergeSortFile = new File("threadMergeSort.csv");
+           
+            bubbleSortFile.createNewFile();
+            insertionSortFile.createNewFile();
+            mergeSortFile.createNewFile();
+            quickSortFile.createNewFile();
+            threadMergeSortFile.createNewFile();
+           
+            PrintWriter bubbleSortWriter = new PrintWriter(bubbleSortFile);
+            PrintWriter insertionSortWriter = new PrintWriter(insertionSortFile);
+            PrintWriter mergeSortWriter = new PrintWriter(mergeSortFile);
+            PrintWriter quickSortWriter = new PrintWriter(quickSortFile);
+            PrintWriter threadMergeSortWriter = new PrintWriter(threadMergeSortFile);
+           
+            for (int i=0; i<list.size(); i++){
+               writeFile(bubbleSortWriter, list2.get(i));
+               writeFile(insertionSortWriter, list3.get(i));
+               writeFile(mergeSortWriter, list4.get(i));
+               writeFile(quickSortWriter, list5.get(i));
+               writeFile(threadMergeSortWriter, tsList.get(i));
+            }
+            bubbleSortWriter.close();
+            insertionSortWriter.close();
+            mergeSortWriter.close();
+            quickSortWriter.close();
+            threadMergeSortWriter.close();
+           
+        }
+        catch(FileNotFoundException ex){
+            System.out.println(ex);
+        }
+        catch(IOException ex){
+            System.out.println(ex);
+        }
+       
+    }
+    public static int randomInt(){
+        double random = Math.random();
+        if (random < Math.random())
+            random *= -1000;
+        else
+            random *= 1000;
+       
+        return (int)random;
+    }
+    public static void writeFile(PrintWriter f, int num) throws FileNotFoundException{
+        String randomStr = Integer.toString(num) +"\n";
+        f.write(randomStr);
+    }
+    public static ArrayList<Integer> readFile(File f) throws FileNotFoundException{
+        ArrayList<Integer> list = new ArrayList<Integer>();
+        if (!f.exists()){
+            throw new FileNotFoundException();
+        }
+        Scanner read = new Scanner(f);
+        int i=0;
+        while (read.hasNextInt()){
+            String tempStr = read.nextLine();
+            //System.out.println(tempStr);
+            list.add(Integer.parseInt(tempStr));
+            i++;
+        }
+        return list;
+    }
+    public static void bubbleSort(ArrayList<Integer> list){
+        int temp;
+        for (int i=0; i<list.size(); i++){
+            for (int j=0; j<list.size()-i-1; j++){
+                if (list.get(j) < list.get(j+1)){
+                    temp = list.get(j);
+                    list.set(j, list.get(j+1));
+                    list.set(j+1, temp);
+                }  
+            }
+        }
+    }
+    public static void quickSort(ArrayList<Integer> list, int left, int right){
+
+        if (left >= right){
+            return;
+        }
+        int par = partition(list, left, right);
+        quickSort(list, left, par-1);
+        quickSort(list, par+1, right);
+    }
+    public static int partition(ArrayList<Integer> list, int left, int right){
+        int pivot = list.get(left+(right-left)/2);
+        int low = left;
+        int high = right;
+
+        while (low <= high){
+            while (list.get(low) > pivot){
+                low++;
+            }
+            while (list.get(high) < pivot){
+                high--;
+            }
+            if(low <= high){
+                int temp = list.get(low);
+                list.set(low, list.get(high));
+                list.set(high, temp);
+                low++;
+                high--;
+            }
+        }
+        return low;  
+    }
+    public static void insertionSort(ArrayList<Integer> list){
+        int j;
+        int key;
+        for(int i=1;i<list.size();i++){
+            key = list.get(i);
+            for(j=i-1; j>=0; j--){//descending order
+                if (list.get(j)<key){
+                    list.set(j+1, list.get(j));  
+                }
+                else{
+                    break;
+                }
+            }
+            list.set(j+1, key);
+        }      
+    }
+    public static void mergeSort(ArrayList<Integer> list){ 
+        ArrayList<Integer> firstHalf = new ArrayList<>();
+        ArrayList<Integer> secondHalf = new ArrayList<>();
+
+        int half;
+
+        if (list.size() > 1) {
+            half = list.size() / 2;
+            // copy the left half of numbers into left.
+            for (int i = 0; i < half; i++)
+                firstHalf.add(list.get(i));
+
+            //copy the right half of numbers into right.
+            for (int j = half; j <list.size(); j++)
+                secondHalf.add(list.get(j));
+
+            mergeSort(firstHalf);
+            mergeSort(secondHalf);
+
+            merge(list, firstHalf, secondHalf);
+        }
+    }
+
+    private static void merge(ArrayList<Integer> list, ArrayList<Integer> list2, ArrayList<Integer> list3){
+          //set up a temporary arraylist to build the merge list
+        ArrayList<Integer> temp = new ArrayList<>();
+
+        //set up index values for merging the two lists
+        int current1 = 0;    
+        int current2 = 0;
+        int current3 = 0;
+
+        while (current2 < list2.size() && current3 < list3.size()) {
+            if (list2.get(current2) > list3.get(current3) ) {
+                    list.set(current1, list2.get(current2));
+                    current2++;
+                } else {
+                    list.set(current1, list3.get(current3));
+                    current3++;
+                }
+                current1++;
+            }
+
+            int tempIndex = 0;
+            if (current2 >= list2.size()) {
+                temp = list3;
+                tempIndex = current3;
+            }
+            else {
+                temp = list2;
+                tempIndex = current2;
+            }
+
+            for (int i = tempIndex; i < temp.size(); i++) {
+                list.set(current1, temp.get(i));
+                current1++;
+                }
+            }
+    }
